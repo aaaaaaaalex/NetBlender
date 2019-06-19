@@ -1,5 +1,4 @@
 import json
-
 from .net import Net
 
 """
@@ -16,9 +15,6 @@ def loadactivationsequence (filename):
 """
 Load a model architecture and it's activation sequence, given the directory containing the relevant files
 """
-def load (dirname):
-    activations_location = "{}activations.json".format(dirname)
-    neural_net = Net( loadactivationsequence(activations_location) )
-
+def load (file_path='/home/alex/Documents/NetBlender/netblend/activations3d.json'):
+    neural_net = Net( loadactivationsequence(file_path) )
     return neural_net
-
