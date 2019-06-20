@@ -15,6 +15,6 @@ def loadactivationsequence (filename):
 """
 Load a model architecture and it's activation sequence, given the directory containing the relevant files
 """
-def load (file_path='/home/alex/Documents/NetBlender/netblend/activations3d.json'):
+def load (file_path='/home/alex/Documents/NetBlender/netblend/activations.json'):
     neural_net = Net( loadactivationsequence(file_path) )
     return neural_net
