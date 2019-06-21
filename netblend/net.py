@@ -44,14 +44,12 @@ class Net:
     meshfunc <func>: the primitive mesh function to call for each neuron
     centered <bool>: center layers relative to one-another
     """
-    def make(self, origin=(0,0,0), meshfunc=bpy.ops.mesh.primitive_cube_add, centered=True):
+    def spawnnetwork(self, origin=(0,0,0), meshfunc=bpy.ops.mesh.primitive_cube_add, centered=True):
         self.neurons = []
-
         next_neuron_loc = [0,0,0]
         # construct the network one layer at a time
         for layer in self.arch:
-
-            assert type(layer[0]) is int, "Bad layer shape: A 2-d layer must have shape [y-axis-size, z-axis-size]"
+            assert type(layer[0]) is int, "Bad layer data: a layer must be a list of int types representing the layer's size e.g. [512, 512] "
 
             if centered:
                 # list-type layers are expected to be 2-d, but handle for 1-d lists
@@ -92,13 +90,10 @@ class Net:
     """
     def __init__ (self, config):
         self.neuron_radius = 0.015
-        self.scale = (.5, 0.05, 0.05)
+        self.scale = (.2, 0.05, 0.05)
 
-        self.arch = []
         self.activations_sequence = config['activations']
-
-        self.__tallest_layer__ = None
-        self.__widest_layer__ = None
+        self.arch = []
 
         # get largest layer in arch
         widest = 0
