@@ -26,60 +26,46 @@ class Net:
 
 
     """
-    'centeroffset2D' takes a layer's dimensions and returns a 2-d starting offset
-        such that the layer will be centered with the net's largest layer.
-    layer_dimensions <tuple[2]>: the y and z dimensions (assuming the x-dimension is 1) of the layer to center
-    """
-    def __centeroffset2D__(self, layer_dimensions):
-        assert type(layer_dimensions) is tuple and len(layer_dimensions) == 2, "Invalid layer dimensions: arg must be a tuple with two items representing the layer's y and z dimensions"
-        y_offset = self.__centeroffset1D__(layer_dimensions[0], axis=1)
-        z_offset = self.__centeroffset1D__(layer_dimensions[1], axis=2)
-
-        return (y_offset, z_offset)
-
-
-    """
     'make' adds neuron objects to the scene according to the network's shape
     origin <tuple[3]>: coordinates to begin building from
     meshfunc <func>: the primitive mesh function to call for each neuron
     centered <bool>: center layers relative to one-another
     """
-    def spawnnetwork(self, origin=(0,0,0), meshfunc=bpy.ops.mesh.primitive_cube_add, centered=True):
+    def spawnnetwork(self, origin=(0,0,0), meshfunc=bpy.ops.mesh.primitive_cube_add, alignY=True, alignZ=False):
         self.neurons = []
         next_neuron_loc = [0,0,0]
         # construct the network one layer at a time
         for layer in self.arch:
             assert type(layer[0]) is int, "Bad layer data: a layer must be a list of int types representing the layer's size e.g. [512, 512] "
 
-            if centered:
-                # list-type layers are expected to be 2-d, but handle for 1-d lists
-                try:
-                    y_z_dimensions = (layer[0], layer[1])
-                except IndexError:
-                    z_z_dimensions = (layer[0], 1)
+            # starting-offsets for layers and neuron columns
+            y_offset = 0
+            z_offset = 0
+            # list-type layers are expected to be 2-d, but handle for 1-d lists
+            try:
+                layer_dimensions = [layer[0], layer[1]]
+            except IndexError:
+                layer_dimensions = [layer[0], 1]
+            if alignY: y_offset = self.__centeroffset1D__(layer_dimensions[0], axis=1)
+            if alignZ: z_offset = self.__centeroffset1D__(layer_dimensions[1], axis=2)
 
-                offsetY, offsetZ = self.__centeroffset2D__(y_z_dimensions)
-                next_neuron_loc[1] += offsetY
-            else:
-                offsetY = 0
-                offsetZ = 0
-
-            # make a grid for 2-d layers
+            # make a grid of neurons
+            next_neuron_loc[1] = origin[1] + y_offset
             for y in range(layer[0]):
-                # offset each column of neurons on the z-axis if necessary
-                next_neuron_loc[2] = origin[2] + offsetZ
+                next_neuron_loc[2] = origin[2] + z_offset
 
+                # build a column of neurons
                 for z in range(layer[1]):
+                    # place a neuron
                     meshfunc( radius=self.neuron_radius, location=tuple(next_neuron_loc) )
                     self.neurons.append(bpy.context.active_object)
+
+                    # advance on neuron up
                     next_neuron_loc[2] += self.scale[2]
-
-                # advance to the next column starting point
+                # advance to the next column
                 next_neuron_loc[1] += self.scale[1]
-
-            # advance the next neuron location on x-axis and reset it on the y-axis
+            # advance the next layer
             next_neuron_loc[0] += self.scale[0]
-            next_neuron_loc[1] = origin[1]
 
         return self.neurons
 
@@ -89,11 +75,14 @@ class Net:
     config <dict>: should contain 'arch' and 'activations_sequence' lists
     """
     def __init__ (self, config):
+        # physical shape
         self.neuron_radius = 0.015
         self.scale = (.2, 0.05, 0.05)
-
-        self.activations_sequence = config['activations']
         self.arch = []
+
+        # behaviour / visual
+        self.max_material_luminosity = 20
+        self.activations_sequence = config['activations']
 
         # get largest layer in arch
         widest = 0
@@ -119,5 +108,4 @@ class Net:
 
         self.__widest_layer__ = widest
         self.__tallest_layer__ = tallest
-
         return
