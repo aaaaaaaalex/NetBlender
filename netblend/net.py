@@ -33,7 +33,10 @@ class Net:
     """
     def spawnnetwork(self, origin=(0,0,0), meshfunc=bpy.ops.mesh.primitive_cube_add, alignY=True, alignZ=False):
         self.neurons = []
-        next_neuron_loc = [0,0,0]
+        next_neuron_loc = [ origin[0],
+                            origin[1],
+                            origin[2] ]
+        
         # construct the network one layer at a time
         for layer in self.arch:
             assert type(layer[0]) is int, "Bad layer data: a layer must be a list of int types representing the layer's size e.g. [512, 512] "
@@ -41,7 +44,7 @@ class Net:
             # starting-offsets for layers and neuron columns
             y_offset = 0
             z_offset = 0
-            # list-type layers are expected to be 2-d, but handle for 1-d lists
+            # list-type layers are expected to specify 2 dimensions, but handle for 1-d lists
             try:
                 layer_dimensions = [layer[0], layer[1]]
             except IndexError:
@@ -49,7 +52,7 @@ class Net:
             if alignY: y_offset = self.__centeroffset1D__(layer_dimensions[0], axis=1)
             if alignZ: z_offset = self.__centeroffset1D__(layer_dimensions[1], axis=2)
 
-            # make a grid of neurons
+            # build a grid of neurons
             next_neuron_loc[1] = origin[1] + y_offset
             for y in range(layer[0]):
                 next_neuron_loc[2] = origin[2] + z_offset
@@ -60,11 +63,11 @@ class Net:
                     meshfunc( radius=self.neuron_radius, location=tuple(next_neuron_loc) )
                     self.neurons.append(bpy.context.active_object)
 
-                    # advance on neuron up
+                    # advance one neuron up
                     next_neuron_loc[2] += self.scale[2]
                 # advance to the next column
                 next_neuron_loc[1] += self.scale[1]
-            # advance the next layer
+            # advance to the next layer
             next_neuron_loc[0] += self.scale[0]
 
         return self.neurons
